@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jornada dos Polígonos Regulares</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Source+Sans+3:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#f6f3ec;
+  --paper-line:#dcd5c3;
+  --ink:#1c2541;
+  --ink-soft:#4a5372;
+  --brass:#b9862f;
+  --brass-dark:#8f6620;
+  --jade:#2a6f62;
+  --rust:#b44622;
+  --card:#fffdf8;
+  --shadow: 0 2px 0 rgba(28,37,65,0.06);
+  --radius: 3px;
+}
+*{box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{
+  margin:0;
+  background:
+    linear-gradient(var(--paper-line) 1px, transparent 1px) 0 0/100% 28px,
+    linear-gradient(90deg, var(--paper-line) 1px, transparent 1px) 0 0/28px 100%,
+    var(--paper);
+  background-attachment:fixed;
+  color:var(--ink);
+  font-family:'Source Sans 3', sans-serif;
+  font-size:16px;
+  line-height:1.55;
+}
+h1,h2,h3,h4{font-family:'Fraunces', serif; margin:0 0 .4em; letter-spacing:-0.01em;}
+.mono{font-family:'IBM Plex Mono', monospace;}
+button{font-family:inherit; cursor:pointer;}
+a{color:var(--brass-dark);}
+
+/* ---------- NAVBAR ---------- */
+#navbar{
+  position:sticky; top:0; z-index:50;
+  background:rgba(246,243,236,0.94);
+  backdrop-filter:blur(6px);
+  border-bottom:2px solid var(--ink);
+  display:flex; align-items:center; justify-content:space-between;
+  padding:10px 22px; flex-wrap:wrap; gap:10px;
+}
+#navbar .brand{display:flex; align-items:center; gap:10px;}
+#navbar .brand svg{width:30px;height:30px;}
+#navbar .brand-text{font-family:'Fraunces',serif; font-weight:700; font-size:1.15rem;}
+.stats{display:flex; align-items:center; gap:16px; flex-wrap:wrap;}
+.stat-chip{
+  display:flex; align-items:center; gap:6px;
+  border:1.5px solid var(--ink); border-radius:20px;
+  padding:4px 12px; font-family:'IBM Plex Mono',monospace; font-size:.82rem;
+  background:var(--card);
+}
+.stat-chip b{color:var(--brass-dark);}
+#xpbar-wrap{width:120px; height:8px; border:1.5px solid var(--ink); border-radius:6px; overflow:hidden; background:var(--card);}
+#xpbar{height:100%; background:var(--brass); width:0%; transition:width .4s ease;}
+.toggle-btn{
+  border:1.5px solid var(--ink); background:var(--card); border-radius:20px;
+  padding:4px 10px; font-size:.78rem; font-family:'IBM Plex Mono',monospace;
+}
+.toggle-btn.active{background:var(--ink); color:var(--paper);}
+
+/* ---------- TABS ---------- */
+#tabnav{
+  display:flex; gap:4px; overflow-x:auto; padding:10px 18px;
+  border-bottom:2px solid var(--ink); background:var(--paper);
+  position:sticky; top:58px; z-index:40;
+}
+.tab-btn{
+  border:none; background:transparent; padding:8px 14px; font-size:.92rem;
+  font-weight:600; color:var(--ink-soft); border-radius:var(--radius) var(--radius) 0 0;
+  white-space:nowrap; border-bottom:3px solid transparent;
+}
+.tab-btn.active{color:var(--ink); border-bottom:3px solid var(--brass);}
+.tab-panel{display:none; max-width:980px; margin:0 auto; padding:28px 20px 80px;}
+.tab-panel.active{display:block; animation:fadein .35s ease;}
+@keyframes fadein{from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);}}
+
+/* ---------- HERO ---------- */
+.hero{display:flex; align-items:center; gap:36px; flex-wrap:wrap; padding:20px 0 30px;}
+.hero-text{flex:1; min-width:260px;}
+.hero-text .eyebrow{font-family:'IBM Plex Mono',monospace; color:var(--brass-dark); font-size:.85rem; letter-spacing:.08em; text-transform:uppercase;}
+.hero-text h1{font-size:2.6rem; line-height:1.05;}
+.hero-text p{color:var(--ink-soft); max-width:44ch;}
+.hero-compass{width:220px; height:220px; flex-shrink:0;}
+.cta-row{display:flex; gap:10px; margin-top:14px; flex-wrap:wrap;}
+.btn{border:2px solid var(--ink); background:var(--ink); color:var(--paper); padding:10px 18px; border-radius:var(--radius); font-weight:600;}
+.btn.outline{background:transparent; color:var(--ink);}
+.btn:hover{transform:translateY(-1px);}
+
+/* ---------- CARDS / MODULES ---------- */
+.module-card{
+  background:var(--card); border:1.5px solid var(--ink); border-radius:6px;
+  padding:24px 26px; margin:22px 0; box-shadow:var(--shadow);
+}
+.module-head{display:flex; align-items:baseline; gap:12px; margin-bottom:6px;}
+.module-num{font-family:'IBM Plex Mono',monospace; color:var(--brass-dark); font-weight:600;}
+.callout{
+  background:#f1ecd9; border-left:4px solid var(--brass); padding:12px 16px;
+  border-radius:0 4px 4px 0; margin:14px 0; font-size:.95rem;
+}
+.callout b{color:var(--brass-dark);}
+table.data-table{width:100%; border-collapse:collapse; margin:14px 0; font-size:.92rem;}
+table.data-table th, table.data-table td{border:1px solid var(--paper-line); padding:7px 10px; text-align:center;}
+table.data-table th{background:var(--ink); color:var(--paper); font-family:'IBM Plex Mono',monospace; font-weight:500;}
+table.data-table tr:nth-child(even){background:#f1ecdf;}
+.formula{
+  font-family:'IBM Plex Mono',monospace; background:var(--ink); color:var(--paper);
+  display:inline-block; padding:6px 12px; border-radius:4px; margin:6px 6px 6px 0; font-size:.95rem;
+}
+
+/* ---------- LAB ---------- */
+.lab-grid{display:grid; grid-template-columns:1.1fr 1fr; gap:24px; align-items:start;}
+@media(max-width:760px){.lab-grid{grid-template-columns:1fr;}}
+.lab-panel{background:var(--card); border:1.5px solid var(--ink); border-radius:6px; padding:18px; box-shadow:var(--shadow);}
+#polySvg{width:100%; height:auto; background:var(--paper); border:1px solid var(--paper-line); border-radius:4px;}
+.slider-row{display:flex; align-items:center; gap:10px; margin-top:12px;}
+input[type=range]{flex:1; accent-color:var(--brass);}
+.n-readout{font-family:'IBM Plex Mono',monospace; font-weight:600; font-size:1.1rem; min-width:34px; text-align:center;}
+.readout-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:16px;}
+.readout-item{border:1px solid var(--paper-line); border-radius:4px; padding:8px 10px; background:var(--paper);}
+.readout-item .label{font-size:.75rem; color:var(--ink-soft); text-transform:uppercase; letter-spacing:.04em;}
+.readout-item .val{font-family:'IBM Plex Mono',monospace; font-weight:600; font-size:1.15rem; color:var(--brass-dark);}
+
+.tile-row{display:flex; gap:16px; flex-wrap:wrap; margin-top:10px;}
+.tile-box{flex:1; min-width:220px; text-align:center;}
+.tile-box svg{width:100%; max-width:260px; background:var(--paper); border:1px solid var(--paper-line); border-radius:4px;}
+.tile-verdict{font-weight:600; margin-top:6px;}
+.tile-verdict.ok{color:var(--jade);}
+.tile-verdict.no{color:var(--rust);}
+
+/* ---------- CALCULATOR ---------- */
+.calc-form{display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end; margin-bottom:16px;}
+.field{display:flex; flex-direction:column; gap:4px;}
+.field label{font-size:.8rem; color:var(--ink-soft);}
+select, input[type=number]{
+  border:1.5px solid var(--ink); border-radius:4px; padding:8px 10px; font-family:'IBM Plex Mono',monospace; font-size:.95rem;
+  background:var(--card);
+}
+#calcSteps{background:var(--card); border:1.5px solid var(--ink); border-radius:6px; padding:18px; min-height:60px;}
+.step-line{padding:6px 0; border-bottom:1px dashed var(--paper-line); font-family:'IBM Plex Mono',monospace; font-size:.92rem;}
+.step-line:last-child{border-bottom:none; color:var(--jade); font-weight:600;}
+
+/* ---------- FLASHCARDS ---------- */
+.flash-wrap{display:flex; flex-direction:column; align-items:center; gap:16px;}
+.flashcard{width:100%; max-width:420px; height:230px; perspective:1200px; cursor:pointer;}
+.flash-inner{position:relative; width:100%; height:100%; transition:transform .5s; transform-style:preserve-3d;}
+.flashcard.flipped .flash-inner{transform:rotateY(180deg);}
+.flash-face{
+  position:absolute; inset:0; backface-visibility:hidden; border:2px solid var(--ink); border-radius:8px;
+  display:flex; align-items:center; justify-content:center; text-align:center; padding:22px;
+  background:var(--card); box-shadow:var(--shadow);
+}
+.flash-face.back{transform:rotateY(180deg); background:var(--ink); color:var(--paper);}
+.flash-face .tag{position:absolute; top:10px; left:14px; font-family:'IBM Plex Mono',monospace; font-size:.72rem; color:var(--brass-dark);}
+.flash-face.back .tag{color:var(--brass);}
+.flash-nav{display:flex; gap:10px; align-items:center;}
+
+/* ---------- QUIZ ---------- */
+.quiz-q{background:var(--card); border:1.5px solid var(--ink); border-radius:6px; padding:18px 20px; margin:16px 0;}
+.quiz-q .qid{font-family:'IBM Plex Mono',monospace; color:var(--brass-dark); font-size:.8rem;}
+.quiz-opts{display:flex; flex-direction:column; gap:8px; margin-top:10px;}
+.opt-btn{
+  text-align:left; border:1.5px solid var(--paper-line); background:var(--paper); border-radius:4px;
+  padding:9px 12px; font-size:.92rem;
+}
+.opt-btn:hover{border-color:var(--ink);}
+.opt-btn.correct{background:#e2efe9; border-color:var(--jade); color:var(--jade); font-weight:600;}
+.opt-btn.wrong{background:#f6e3da; border-color:var(--rust); color:var(--rust); font-weight:600;}
+.opt-btn:disabled{cursor:default;}
+.feedback{margin-top:10px; font-size:.9rem; padding:10px 12px; border-radius:4px; display:none;}
+.feedback.show{display:block;}
+.feedback.ok{background:#e2efe9; color:var(--jade);}
+.feedback.no{background:#f6e3da; color:var(--rust);}
+
+.section-title{display:flex; align-items:center; gap:10px; margin:28px 0 6px;}
+.section-title .line{flex:1; height:1px; background:var(--paper-line);}
+
+/* ---------- GABARITO ---------- */
+.gab-item{border:1px solid var(--paper-line); border-radius:6px; margin-bottom:10px; overflow:hidden; background:var(--card);}
+.gab-head{display:flex; justify-content:space-between; align-items:center; padding:12px 16px; cursor:pointer; font-weight:600;}
+.gab-head .qid{color:var(--brass-dark); font-family:'IBM Plex Mono',monospace; margin-right:8px;}
+.gab-body{max-height:0; overflow:hidden; transition:max-height .3s ease; padding:0 16px;}
+.gab-body p{margin:10px 0;}
+.gab-item.open .gab-body{max-height:400px; padding:0 16px 14px;}
+.gab-item.open .chev{transform:rotate(180deg);}
+.chev{transition:transform .3s;}
+
+.filter-row{display:flex; gap:8px; margin-bottom:14px; flex-wrap:wrap;}
+.filter-btn{border:1.5px solid var(--ink); background:var(--card); border-radius:20px; padding:5px 14px; font-size:.82rem;}
+.filter-btn.active{background:var(--ink); color:var(--paper);}
+
+footer{text-align:center; padding:26px; color:var(--ink-soft); font-size:.82rem;}
+::selection{background:var(--brass); color:var(--paper);}
+.reduce-motion *{animation:none !important; transition:none !important;}
+:focus-visible{outline:2.5px solid var(--brass-dark); outline-offset:2px;}
+</style>
+</head>
+<body>
+
+<nav id="navbar">
+  <div class="brand">
+    <svg viewBox="0 0 40 40"><polygon points="20,4 33,13 28,30 12,30 7,13" fill="none" stroke="#1c2541" stroke-width="2"/><circle cx="20" cy="19" r="2" fill="#b9862f"/></svg>
+    <span class="brand-text">Jornada dos Polígonos</span>
+  </div>
+  <div class="stats">
+    <div class="stat-chip">⭐ Nível <b id="lvlChip">1</b></div>
+    <div class="stat-chip">XP <b id="xpChip">0</b><div id="xpbar-wrap"><div id="xpbar"></div></div></div>
+    <div class="stat-chip">🔥 <b id="streakChip">0</b></div>
+    <button class="toggle-btn" id="focusToggle">🎯 Foco</button>
+    <button class="toggle-btn" id="accToggle">♿ Acessível</button>
+  </div>
+</nav>
+
+<div id="tabnav">
+  <button class="tab-btn active" data-tab="inicio">🏛️ Início</button>
+  <button class="tab-btn" data-tab="aprender">📚 Aprender &amp; Lab</button>
+  <button class="tab-btn" data-tab="calc">⚡ Calculadora</button>
+  <button class="tab-btn" data-tab="flash">🃏 Flashcards</button>
+  <button class="tab-btn" data-tab="praticar">🧠 Praticar</button>
+  <button class="tab-btn" data-tab="desafio">🏆 Desafio Final</button>
+  <button class="tab-btn" data-tab="gabarito">📝 Gabarito</button>
+</div>
+
+<!-- ===================== INÍCIO ===================== -->
+<section class="tab-panel active" id="tab-inicio">
+  <div class="hero">
+    <div class="hero-text">
+      <div class="eyebrow">Módulo de Geometria · Polígonos Regulares</div>
+      <h1>Todo lado igual.<br>Todo ângulo igual.</h1>
+      <p>Explore a régua, o compasso e o transferidor de um jeito diferente: arraste um controle deslizante e veja, em tempo real, como o número de lados de um polígono governa cada um dos seus ângulos.</p>
+      <div class="cta-row">
+        <button class="btn" data-goto="aprender">Começar pelo Módulo 1</button>
+        <button class="btn outline" data-goto="desafio">Ir direto ao Desafio Final</button>
+      </div>
+    </div>
+    <svg class="hero-compass" viewBox="0 0 220 220">
+      <circle cx="110" cy="110" r="90" fill="none" stroke="#dcd5c3" stroke-width="1"/>
+      <g id="heroPoly"></g>
+      <circle cx="110" cy="110" r="3" fill="#b9862f"/>
+      <line id="compassArm" x1="110" y1="110" x2="110" y2="20" stroke="#1c2541" stroke-width="2"/>
+    </svg>
+  </div>
+
+  <div class="module-card">
+    <h3>Como funciona a jornada</h3>
+    <div class="readout-grid" style="grid-template-columns:repeat(4,1fr)">
+      <div class="readout-item"><div class="label">📚 Aprender</div><div class="val" style="font-size:.85rem">4 módulos + laboratório visual</div></div>
+      <div class="readout-item"><div class="label">🧠 Praticar</div><div class="val" style="font-size:.85rem">12 exercícios de fixação</div></div>
+      <div class="readout-item"><div class="label">🏆 Desafio</div><div class="val" style="font-size:.85rem">15 questões, 3 níveis</div></div>
+      <div class="readout-item"><div class="label">📝 Gabarito</div><div class="val" style="font-size:.85rem">27 resoluções passo a passo</div></div>
+    </div>
+  </div>
+  <div class="module-card">
+    <h3>Seu progresso</h3>
+    <p id="progressSummary" class="mono" style="color:var(--ink-soft)"></p>
+  </div>
+</section>
+
+<!-- ===================== APRENDER & LAB ===================== -->
+<section class="tab-panel" id="tab-aprender">
+
+  <div class="module-card" id="m1">
+    <div class="module-head"><span class="module-num">MÓDULO 1</span><h2>Classificação dos Polígonos</h2></div>
+    <p>Um <b>polígono</b> é uma figura plana fechada, formada por segmentos de reta consecutivos que não se cruzam.</p>
+    <div class="callout">💡 <b>Em outras palavras:</b> imagine desenhar a figura sem tirar o lápis do papel e sem passar duas vezes pelo mesmo risco — se você volta exatamente ao ponto de partida sem cruzar nenhuma linha, é um polígono.</div>
+    <p>Figuras abertas (que não fecham) ou com lados curvos <b>não</b> são polígonos.</p>
+    <h4>Nomenclatura por número de lados</h4>
+    <table class="data-table"><thead><tr><th>n</th><th>Nome</th><th>n</th><th>Nome</th></tr></thead>
+      <tbody>
+        <tr><td>3</td><td>Triângulo</td><td>10</td><td>Decágono</td></tr>
+        <tr><td>4</td><td>Quadrilátero</td><td>11</td><td>Undecágono</td></tr>
+        <tr><td>5</td><td>Pentágono</td><td>12</td><td>Dodecágono</td></tr>
+        <tr><td>6</td><td>Hexágono</td><td>13–19</td><td>Tridecágono … Eneadecágono</td></tr>
+        <tr><td>7</td><td>Heptágono</td><td>20</td><td>Icoságono</td></tr>
+        <tr><td>8</td><td>Octógono</td><td colspan="2" rowspan="2"></td></tr>
+        <tr><td>9</td><td>Eneágono</td></tr>
+      </tbody>
+    </table>
+    <h4>Convexo × Não convexo (côncavo)</h4>
+    <p>Num polígono <b>convexo</b>, todo ângulo interno é menor que 180°. Num <b>côncavo</b>, ao menos um vértice "afunda" para dentro, formando um ângulo reentrante maior que 180°.</p>
+    <div class="callout">💡 <b>Em outras palavras:</b> convexo é como um elástico esticado em volta de pregos — a borda nunca entra para dentro. Côncavo tem pelo menos um "bico" apontando para dentro da figura, como uma estrela ou uma seta.</div>
+    <div class="section-title"><b>Fixação — Módulo 1</b><div class="line"></div></div>
+    <div id="quizM1"></div>
+  </div>
+
+  <div class="module-card" id="m2">
+    <div class="module-head"><span class="module-num">MÓDULO 2</span><h2>Ângulos Internos e Externos</h2></div>
+    <p>Em cada vértice, o ângulo interno (a<sub>i</sub>) e o ângulo externo (a<sub>e</sub>) adjacentes são suplementares:</p>
+    <span class="formula">a<sub>i</sub> + a<sub>e</sub> = 180°</span>
+    <div class="callout">💡 <b>Em outras palavras:</b> o ângulo interno é o "canto" da figura, por dentro. O externo é o quanto você precisa girar para continuar andando pelo contorno depois de chegar naquele canto.</div>
+    <p><b>Soma dos ângulos internos:</b></p>
+    <span class="formula">S<sub>i</sub> = (n − 2) · 180°</span>
+    <p>Isso vem de dividir o polígono em triângulos, todos partindo de um único vértice: um polígono de n lados sempre se divide em exatamente (n − 2) triângulos, e cada triângulo contribui 180°.</p>
+    <p><b>Soma dos ângulos externos:</b></p>
+    <span class="formula">S<sub>e</sub> = 360°</span>
+    <div class="callout">💡 <b>Em outras palavras:</b> é a analogia da formiguinha — se ela caminha pelo contorno do polígono e volta ao ponto de partida, ela deu exatamente uma volta completa, 360°, não importa quantos lados tenha a figura.</div>
+    <div class="section-title"><b>Fixação — Módulo 2</b><div class="line"></div></div>
+    <div id="quizM2"></div>
+  </div>
+
+  <div class="module-card" id="m3">
+    <div class="module-head"><span class="module-num">MÓDULO 3</span><h2>Polígonos Regulares</h2></div>
+    <p>Um polígono é <b>regular</b> quando é, ao mesmo tempo, <b>equilátero</b> (todos os lados iguais) <b>e</b> <b>equiângulo</b> (todos os ângulos iguais).</p>
+    <div class="callout">💡 <b>Em outras palavras:</b> um losango é só equilátero (lados iguais, ângulos diferentes). Um retângulo é só equiângulo (ângulos de 90°, lados diferentes). Só o quadrado é as duas coisas ao mesmo tempo — por isso é regular.</div>
+    <span class="formula">a<sub>i</sub> = (n − 2) · 180° / n</span>
+    <span class="formula">a<sub>e</sub> = 360° / n</span>
+    <h4>Tabela resumo</h4>
+    <table class="data-table" id="m3table"><thead><tr><th>n</th><th>Nome</th><th>S<sub>i</sub></th><th>a<sub>i</sub></th><th>a<sub>e</sub></th></tr></thead><tbody></tbody></table>
+    <div class="section-title"><b>Fixação — Módulo 3</b><div class="line"></div></div>
+    <div id="quizM3"></div>
+  </div>
+
+  <div class="module-card" id="m4">
+    <div class="module-head"><span class="module-num">MÓDULO 4</span><h2>Centro e Ângulo Central</h2></div>
+    <p>Todo polígono regular tem um <b>centro</b> (O), de onde saem o <b>raio</b> (R, até um vértice) e o <b>apótema</b> (a, até o meio de um lado). O <b>ângulo central</b> (a<sub>c</sub>) é o ângulo formado por dois raios consecutivos.</p>
+    <span class="formula">a<sub>c</sub> = 360° / n</span>
+    <p>Repare: essa é exatamente a mesma fórmula do ângulo externo. Não é coincidência — geometricamente, <b>a<sub>c</sub> = a<sub>e</sub></b> sempre.</p>
+    <div class="section-title"><b>Fixação — Módulo 4</b><div class="line"></div></div>
+    <div id="quizM4"></div>
+  </div>
+
+  <div class="module-card">
+    <div class="module-head"><span class="module-num">LABORATÓRIO</span><h2>Visualizador Geométrico</h2></div>
+    <div class="lab-grid">
+      <div class="lab-panel">
+        <svg id="polySvg" viewBox="0 0 320 320"></svg>
+        <div class="slider-row">
+          <span class="mono" style="font-size:.85rem">n=3</span>
+          <input type="range" id="nSlider" min="3" max="20" value="6">
+          <span class="mono" style="font-size:.85rem">n=20</span>
+          <span class="n-readout" id="nReadout">6</span>
+        </div>
+      </div>
+      <div class="lab-panel">
+        <h4 id="polyName" style="margin-top:0">Hexágono</h4>
+        <div class="readout-grid">
+          <div class="readout-item"><div class="label">Soma internos (S<sub>i</sub>)</div><div class="val" id="rSi">720°</div></div>
+          <div class="readout-item"><div class="label">Ângulo interno (a<sub>i</sub>)</div><div class="val" id="rAi">120°</div></div>
+          <div class="readout-item"><div class="label">Ângulo externo (a<sub>e</sub>)</div><div class="val" id="rAe">60°</div></div>
+          <div class="readout-item"><div class="label">Ângulo central (a<sub>c</sub>)</div><div class="val" id="rAc">60°</div></div>
+          <div class="readout-item"><div class="label">Diagonais totais</div><div class="val" id="rDiagT">9</div></div>
+          <div class="readout-item"><div class="label">Diagonais por vértice</div><div class="val" id="rDiagV">3</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="module-card">
+    <div class="module-head"><span class="module-num">LABORATÓRIO</span><h2>Simulador de Ladrilhamento do Plano</h2></div>
+    <p>Um polígono regular <b>ladrilha o plano</b> (cobre a superfície sem sobrar nem sobrepor) só quando um número inteiro de ângulos internos cabe exatamente em 360° ao redor de um ponto.</p>
+    <div class="tile-row">
+      <div class="tile-box">
+        <svg id="hexTile" viewBox="0 0 260 220"></svg>
+        <div class="tile-verdict ok">Hexágono: 3 × 120° = 360° ✔ ladrilha</div>
+      </div>
+      <div class="tile-box">
+        <svg id="pentTile" viewBox="0 0 260 220"></svg>
+        <div class="tile-verdict no">Pentágono: 3 × 108° = 324°, sobra 36° ✘ não ladrilha</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== CALCULADORA ===================== -->
+<section class="tab-panel" id="tab-calc">
+  <h2>⚡ Calculadora e Resolvedor Passo a Passo</h2>
+  <p>Informe uma propriedade conhecida do polígono regular e veja a resolução algébrica, linha por linha, até encontrar <b>n</b>.</p>
+  <div class="calc-form">
+    <div class="field">
+      <label for="calcType">Propriedade conhecida</label>
+      <select id="calcType">
+        <option value="ai">Ângulo interno (a<sub>i</sub>)</option>
+        <option value="ae">Ângulo externo (a<sub>e</sub>)</option>
+        <option value="si">Soma dos internos (S<sub>i</sub>)</option>
+        <option value="ac">Ângulo central (a<sub>c</sub>)</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="calcVal">Valor (em graus)</label>
+      <input type="number" id="calcVal" value="150">
+    </div>
+    <button class="btn" id="calcBtn">Resolver</button>
+  </div>
+  <div id="calcSteps"><p class="mono" style="color:var(--ink-soft)">Escolha uma propriedade e clique em Resolver.</p></div>
+</section>
+
+<!-- ===================== FLASHCARDS ===================== -->
+<section class="tab-panel" id="tab-flash">
+  <h2>🃏 Flashcards</h2>
+  <p>Clique no cartão para virar. Use as setas para navegar.</p>
+  <div class="flash-wrap">
+    <div class="flashcard" id="flashcard">
+      <div class="flash-inner">
+        <div class="flash-face front"><span class="tag" id="flashTagF"></span><div id="flashFront"></div></div>
+        <div class="flash-face back"><span class="tag" id="flashTagB">RESPOSTA</span><div id="flashBack"></div></div>
+      </div>
+    </div>
+    <div class="flash-nav">
+      <button class="btn outline" id="flashPrev">← Anterior</button>
+      <span class="mono" id="flashCount">1 / 10</span>
+      <button class="btn outline" id="flashNext">Próximo →</button>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== PRATICAR ===================== -->
+<section class="tab-panel" id="tab-praticar">
+  <h2>🧠 Praticar</h2>
+  <p>Revise as fixações de cada módulo em um só lugar. Cada acerto vale XP.</p>
+  <div class="section-title"><b>Módulo 1</b><div class="line"></div></div>
+  <div id="pracM1"></div>
+  <div class="section-title"><b>Módulo 2</b><div class="line"></div></div>
+  <div id="pracM2"></div>
+  <div class="section-title"><b>Módulo 3</b><div class="line"></div></div>
+  <div id="pracM3"></div>
+  <div class="section-title"><b>Módulo 4</b><div class="line"></div></div>
+  <div id="pracM4"></div>
+</section>
+
+<!-- ===================== DESAFIO FINAL ===================== -->
+<section class="tab-panel" id="tab-desafio">
+  <h2>🏆 Desafio Final</h2>
+  <p>15 questões — 5 fáceis, 5 médias, 5 difíceis. Responda todas e veja seu resultado no fim.</p>
+  <div class="section-title"><b>Fáceis</b><div class="line"></div></div>
+  <div id="chalF"></div>
+  <div class="section-title"><b>Médias</b><div class="line"></div></div>
+  <div id="chalM"></div>
+  <div class="section-title"><b>Difíceis</b><div class="line"></div></div>
+  <div id="chalD"></div>
+  <button class="btn" id="chalSubmit" style="margin-top:18px;">Corrigir Desafio</button>
+  <div id="chalResult" class="module-card" style="display:none;"></div>
+</section>
+
+<!-- ===================== GABARITO ===================== -->
+<section class="tab-panel" id="tab-gabarito">
+  <h2>📝 Gabarito Comentado</h2>
+  <p>Resolução passo a passo das 27 questões (fixações dos módulos + Desafio Final).</p>
+  <div class="filter-row">
+    <button class="filter-btn active" data-f="all">Todas</button>
+    <button class="filter-btn" data-f="mod">Módulos (M1–M4)</button>
+    <button class="filter-btn" data-f="F">Fáceis</button>
+    <button class="filter-btn" data-f="M">Médias</button>
+    <button class="filter-btn" data-f="D">Difíceis</button>
+  </div>
+  <div id="gabList"></div>
+</section>
+
+<footer>Jornada dos Polígonos Regulares · feito para praticar geometria com calma e curiosidade.</footer>
+
+<script>
+/* ============ ESTADO (em memória, com persistência via window.storage) ============ */
+const state = { xp:0, level:1, streak:0, answered:{} };
+const STORAGE_KEY = 'progress:poligonos';
+
+async function loadState(){
+  try{
+    const r = await window.storage.get(STORAGE_KEY, false);
+    if(r && r.value){
+      const s = JSON.parse(r.value);
+      Object.assign(state, s);
+    }
+  }catch(e){ /* nada salvo ainda */ }
+  renderStats();
+}
+async function saveState(){
+  try{ await window.storage.set(STORAGE_KEY, JSON.stringify(state), false); }
+  catch(e){ console.warn('Não foi possível salvar o progresso', e); }
+}
+function renderStats(){
+  document.getElementById('lvlChip').textContent = state.level;
+  document.getElementById('xpChip').textContent = state.xp;
+  document.getElementById('streakChip').textContent = state.streak;
+  const need = state.level*100;
+  document.getElementById('xpbar').style.width = Math.min(100,(state.xp % need)/need*100)+'%';
+  document.getElementById('progressSummary').textContent =
+    `${Object.keys(state.answered).length} questões respondidas · Nível ${state.level} · ${state.xp} XP · sequência de ${state.streak}`;
+}
+function awardXP(amount, correct){
+  state.xp += amount;
+  const need = state.level*100;
+  if(state.xp >= need){ state.level++; }
+  state.streak = correct ? state.streak+1 : 0;
+  renderStats(); saveState();
+}
+
+/* ============ NAVEGAÇÃO ============ */
+document.querySelectorAll('.tab-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>goto(btn.dataset.tab));
+});
+document.querySelectorAll('[data-goto]').forEach(btn=>{
+  btn.addEventListener('click', ()=>goto(btn.dataset.goto));
+});
+function goto(tab){
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active', b.dataset.tab===tab));
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.toggle('active', p.id==='tab-'+tab));
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+document.getElementById('focusToggle').addEventListener('click', function(){
+  this.classList.toggle('active');
+  document.body.classList.toggle('focus-mode');
+});
+document.getElementById('accToggle').addEventListener('click', function(){
+  this.classList.toggle('active');
+  document.body.classList.toggle('reduce-motion');
+  document.body.style.fontSize = this.classList.contains('active') ? '18px' : '16px';
+});
+
+/* ============ MATEMÁTICA DOS POLÍGONOS ============ */
+const NAMES = {3:'Triângulo',4:'Quadrilátero',5:'Pentágono',6:'Hexágono',7:'Heptágono',8:'Octógono',
+9:'Eneágono',10:'Decágono',11:'Undecágono',12:'Dodecágono',13:'Tridecágono',14:'Tetradecágono',
+15:'Pentadecágono',16:'Hexadecágono',17:'Heptadecágono',18:'Octadecágono',19:'Eneadecágono',20:'Icoságono'};
+function Si(n){ return (n-2)*180; }
+function ai(n){ return Si(n)/n; }
+function ae(n){ return 360/n; }
+function ac(n){ return 360/n; }
+function diagTotal(n){ return n*(n-3)/2; }
+function diagVertex(n){ return n-3; }
+function fmt(x){ return (Math.round(x*100)/100).toString().replace(/\.00$/,''); }
+
+function polygonPoints(n, cx, cy, r){
+  const pts=[];
+  for(let i=0;i<n;i++){
+    const ang = -Math.PI/2 + i*2*Math.PI/n;
+    pts.push([cx + r*Math.cos(ang), cy + r*Math.sin(ang)]);
+  }
+  return pts;
+}
+function drawPolySVG(svgEl, n, {showLines=true, size=120, cx=null, cy=null}={}){
+  const vb = svgEl.viewBox.baseVal;
+  cx = cx ?? vb.width/2; cy = cy ?? vb.height/2;
+  const pts = polygonPoints(n, cx, cy, size);
+  const ptsStr = pts.map(p=>p.join(',')).join(' ');
+  let inner = `<polygon points="${ptsStr}" fill="#f1ecd9" stroke="#1c2541" stroke-width="2.5"/>`;
+  if(showLines){
+    inner += `<line x1="${cx}" y1="${cy}" x2="${pts[0][0]}" y2="${pts[0][1]}" stroke="#b9862f" stroke-width="1.6" stroke-dasharray="4 3"/>`;
+    const midx=(pts[0][0]+pts[1][0])/2, midy=(pts[0][1]+pts[1][1])/2;
+    inner += `<line x1="${cx}" y1="${cy}" x2="${midx}" y2="${midy}" stroke="#2a6f62" stroke-width="1.6" stroke-dasharray="4 3"/>`;
+    inner += `<circle cx="${cx}" cy="${cy}" r="3" fill="#1c2541"/>`;
+  }
+  svgEl.innerHTML = inner;
+}
+function updateLab(){
+  const n = +document.getElementById('nSlider').value;
+  document.getElementById('nReadout').textContent = n;
+  document.getElementById('polyName').textContent = `${NAMES[n]} (n=${n})`;
+  document.getElementById('rSi').textContent = fmt(Si(n))+'°';
+  document.getElementById('rAi').textContent = fmt(ai(n))+'°';
+  document.getElementById('rAe').textContent = fmt(ae(n))+'°';
+  document.getElementById('rAc').textContent = fmt(ac(n))+'°';
+  document.getElementById('rDiagT').textContent = diagTotal(n);
+  document.getElementById('rDiagV').textContent = diagVertex(n);
+  drawPolySVG(document.getElementById('polySvg'), n, {size:120});
+}
+document.getElementById('nSlider').addEventListener('input', updateLab);
+
+/* hero mini polygon (static-ish, syncs with slider for a nice touch) */
+function drawHero(n){
+  const g = document.getElementById('heroPoly');
+  const pts = polygonPoints(n, 110,110,70);
+  g.innerHTML = `<polygon points="${pts.map(p=>p.join(',')).join(' ')}" fill="none" stroke="#1c2541" stroke-width="2.5"/>`;
+}
+
+/* tiling simulator */
+function drawHexTiling(svgEl){
+  const r=28, dx=r*1.5, dy=r*Math.sqrt(3);
+  let s='';
+  const centers=[[70,60],[140,60],[105,60+dy/2],[35,60+dy/2],[175,60+dy/2],[70,60+dy],[140,60+dy]];
+  centers.forEach(([cx,cy])=>{
+    const pts=polygonPoints(6,cx,cy,r).map(p=>p.join(',')).join(' ');
+    s+=`<polygon points="${pts}" fill="#f1ecd9" stroke="#2a6f62" stroke-width="1.5"/>`;
+  });
+  svgEl.innerHTML = s;
+}
+function drawPentTiling(svgEl){
+  const r=30;
+  const centers=[[100,60],[100+r*1.9,60+18],[100-r*1.9,60+18],[100+r*1.05,60+r*1.9],[100-r*1.05,60+r*1.9]];
+  let s='';
+  centers.forEach(([cx,cy])=>{
+    const pts=polygonPoints(5,cx,cy,r).map(p=>p.join(',')).join(' ');
+    s+=`<polygon points="${pts}" fill="#f6e3da" stroke="#b44622" stroke-width="1.5"/>`;
+  });
+  svgEl.innerHTML = s;
+}
+
+/* módulo 3 table */
+function buildM3Table(){
+  const tb = document.querySelector('#m3table tbody');
+  [3,4,5,6,8,10].forEach(n=>{
+    tb.insertAdjacentHTML('beforeend', `<tr><td>${n}</td><td>${NAMES[n]}</td><td>${fmt(Si(n))}°</td><td>${fmt(ai(n))}°</td><td>${fmt(ae(n))}°</td></tr>`);
+  });
+}
+
+/* ============ CALCULADORA PASSO A PASSO ============ */
+document.getElementById('calcBtn').addEventListener('click', ()=>{
+  const type = document.getElementById('calcType').value;
+  const val = parseFloat(document.getElementById('calcVal').value);
+  const box = document.getElementById('calcSteps');
+  if(isNaN(val) || val<=0){ box.innerHTML = '<p class="step-line">Informe um valor válido em graus.</p>'; return; }
+  let steps = [];
+  let n;
+  if(type==='ae' || type==='ac'){
+    n = 360/val;
+    steps.push(`a<sub>e</sub> (ou a<sub>c</sub>) = 360° / n  →  ${val}° = 360° / n`);
+    steps.push(`n = 360° / ${val}°`);
+    steps.push(`n = ${fmt(n)}`);
+  } else if(type==='si'){
+    n = val/180 + 2;
+    steps.push(`S<sub>i</sub> = (n − 2) · 180°  →  ${val}° = (n − 2) · 180°`);
+    steps.push(`n − 2 = ${val}° / 180°`);
+    steps.push(`n − 2 = ${fmt(val/180)}`);
+    steps.push(`n = ${fmt(n)}`);
+  } else { // ai
+    n = 360/(180-val);
+    steps.push(`a<sub>i</sub> = (n − 2) · 180° / n  →  ${val}° = (n − 2) · 180° / n`);
+    steps.push(`${val}° · n = 180°n − 360°`);
+    steps.push(`360° = 180°n − ${val}°n = (180 − ${val})° · n`);
+    steps.push(`n = 360° / ${fmt(180-val)}°`);
+    steps.push(`n = ${fmt(n)}`);
+  }
+  const rounded = Math.round(n);
+  const isInt = Math.abs(n-rounded) < 0.02 && rounded>=3;
+  if(isInt){
+    steps.push(`✔ n = ${rounded} → é um <b>${NAMES[rounded]||'polígono de '+rounded+' lados'}</b> regular.`);
+  } else {
+    steps.push(`⚠ n não é um número inteiro (${fmt(n)}) — não existe polígono regular com esse valor exato. Confira o dado de entrada.`);
+  }
+  box.innerHTML = steps.map(s=>`<div class="step-line">${s}</div>`).join('');
+});
+
+/* ============ QUIZ ENGINE ============ */
+function renderQuiz(container, questions){
+  container.innerHTML='';
+  questions.forEach(q=>{
+    const div = document.createElement('div');
+    div.className='quiz-q';
+    div.innerHTML = `<div class="qid">${q.id}</div><div class="qtext">${q.prompt}</div>
+      <div class="quiz-opts">${q.options.map((o,i)=>`<button class="opt-btn" data-i="${i}">${o}</button>`).join('')}</div>
+      <div class="feedback"></div>`;
+    const fb = div.querySelector('.feedback');
+    div.querySelectorAll('.opt-btn').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        if(div.dataset.answered) return;
+        div.dataset.answered='1';
+        const i = +btn.dataset.i;
+        const correct = i===q.correct;
+        div.querySelectorAll('.opt-btn').forEach((b,bi)=>{
+          b.disabled=true;
+          if(bi===q.correct) b.classList.add('correct');
+          else if(bi===i) b.classList.add('wrong');
+        });
+        fb.classList.add('show', correct?'ok':'no');
+        fb.innerHTML = (correct?'✔ Correto! ':'✘ Quase. ') + q.explanation;
+        state.answered[q.id]=correct;
+        awardXP(correct?10:2, correct);
+      });
+    });
+    container.appendChild(div);
+  });
+}
+
+/* ---- Banco de fixação por módulo (3 cada) ---- */
+const QM1 = [
+  {id:'M1-F1', prompt:'Uma figura formada por segmentos de reta consecutivos, fechada e sem cruzamentos, é chamada de:',
+   options:['Polígono','Círculo','Segmento aberto','Ângulo'], correct:0,
+   explanation:'Essa é justamente a definição de polígono: contorno fechado feito de segmentos retos que não se cruzam.'},
+  {id:'M1-F2', prompt:'Um polígono com um ângulo interno maior que 180° é classificado como:',
+   options:['Regular','Convexo','Côncavo (não convexo)','Equilátero'], correct:2,
+   explanation:'Ângulo interno acima de 180° é um ângulo reentrante — característica de polígonos côncavos.'},
+  {id:'M1-F3', prompt:'Qual o nome do polígono de 9 lados?',
+   options:['Octógono','Eneágono','Decágono','Dodecágono'], correct:1,
+   explanation:'9 lados = Eneágono. Octógono tem 8, Decágono tem 10, Dodecágono tem 12.'},
+];
+const QM2 = [
+  {id:'M2-F1', prompt:'Qual é a soma dos ângulos internos de um pentágono (n=5)?',
+   options:['360°','540°','720°','900°'], correct:1,
+   explanation:'S_i = (n-2)·180° = (5-2)·180° = 3·180° = 540°.'},
+  {id:'M2-F2', prompt:'Se um ângulo interno mede 110°, quanto mede o ângulo externo correspondente no mesmo vértice?',
+   options:['90°','70°','110°','250°'], correct:1,
+   explanation:'a_i + a_e = 180° → a_e = 180° - 110° = 70°.'},
+  {id:'M2-F3', prompt:'A soma dos ângulos externos de um polígono convexo qualquer é sempre:',
+   options:['180°','Depende do número de lados','360°','(n-2)·180°'], correct:2,
+   explanation:'S_e = 360° sempre, independente de n — é a "volta completa" da formiguinha andando pelo contorno.'},
+];
+const QM3 = [
+  {id:'M3-F1', prompt:'Para ser regular, um polígono precisa ser:',
+   options:['Apenas equilátero','Apenas equiângulo','Equilátero E equiângulo ao mesmo tempo','Apenas convexo'], correct:2,
+   explanation:'Regular = equilátero (lados iguais) e equiângulo (ângulos iguais) simultaneamente.'},
+  {id:'M3-F2', prompt:'Um losango (lados iguais, ângulos geralmente diferentes) é um polígono regular?',
+   options:['Sim, sempre','Não, é apenas equilátero','Não, é apenas equiângulo','Sim, se for grande o suficiente'], correct:1,
+   explanation:'O losango tem lados iguais mas, em geral, ângulos diferentes — só é equilátero, não regular.'},
+  {id:'M3-F3', prompt:'Qual o ângulo interno de um hexágono regular (n=6)?',
+   options:['100°','108°','120°','135°'], correct:2,
+   explanation:'a_i = (n-2)·180°/n = 4·180°/6 = 720°/6 = 120°.'},
+];
+const QM4 = [
+  {id:'M4-F1', prompt:'O segmento que liga o centro de um polígono regular ao ponto médio de um lado é o:',
+   options:['Raio','Apótema','Diâmetro','Ângulo central'], correct:1,
+   explanation:'Apótema é a distância do centro ao meio do lado; o raio vai do centro até um vértice.'},
+  {id:'M4-F2', prompt:'Qual a relação entre ângulo central (a_c) e ângulo externo (a_e) num polígono regular?',
+   options:['a_c = 2·a_e','a_c = a_e','a_c = 180° - a_e','Não há relação'], correct:1,
+   explanation:'Geometricamente, a_c e a_e sempre coincidem: a_c = a_e = 360°/n.'},
+  {id:'M4-F3', prompt:'Qual o ângulo central de um pentágono regular (n=5)?',
+   options:['60°','72°','90°','108°'], correct:1,
+   explanation:'a_c = 360°/n = 360°/5 = 72°.'},
+];
+document.addEventListener('DOMContentLoaded', ()=>{
+  renderQuiz(document.getElementById('quizM1'), QM1);
+  renderQuiz(document.getElementById('quizM2'), QM2);
+  renderQuiz(document.getElementById('quizM3'), QM3);
+  renderQuiz(document.getElementById('quizM4'), QM4);
+  renderQuiz(document.getElementById('pracM1'), QM1.map(q=>({...q,id:q.id+'-P'})));
+  renderQuiz(document.getElementById('pracM2'), QM2.map(q=>({...q,id:q.id+'-P'})));
+  renderQuiz(document.getElementById('pracM3'), QM3.map(q=>({...q,id:q.id+'-P'})));
+  renderQuiz(document.getElementById('pracM4'), QM4.map(q=>({...q,id:q.id+'-P'})));
+});
+
+/* ---- Desafio Final: 15 questões ---- */
+const CHALLENGE = [
+  {id:'F1', level:'Fácil', prompt:'Quantos lados tem um heptágono?',
+   options:['5','6','7','8'], correct:2, explanation:'"Hepta" = 7. O heptágono tem 7 lados.'},
+  {id:'F2', level:'Fácil', prompt:'Um polígono é côncavo (não convexo) quando:',
+   options:['Todos os ângulos internos são menores que 180°','Existe pelo menos um ângulo interno maior que 180°','Todos os lados são iguais','A soma dos ângulos externos é 360°'], correct:1,
+   explanation:'A presença de um ângulo reentrante (>180°) é o que caracteriza a concavidade.'},
+  {id:'F3', level:'Fácil', prompt:'A soma dos ângulos externos de qualquer polígono convexo é:',
+   options:['(n-2)·180°','360°, sempre','180°','Depende de n'], correct:1,
+   explanation:'S_e = 360° para qualquer polígono convexo, independentemente do número de lados.'},
+  {id:'F4', level:'Fácil', prompt:'Um triângulo equilátero é sempre um polígono regular?',
+   options:['Não, nunca','Sim, porque lados iguais em um triângulo implicam ângulos iguais (60° cada)','Sim, mas só se for retângulo','Depende do tamanho'], correct:1,
+   explanation:'Num triângulo, lados iguais forçam ângulos iguais (60° cada), então equilátero já é automaticamente regular.'},
+  {id:'F5', level:'Fácil', prompt:'Qual o ângulo central de um quadrado?',
+   options:['45°','60°','90°','120°'], correct:2,
+   explanation:'a_c = 360°/n = 360°/4 = 90°.'},
+
+  {id:'M1', level:'Média', prompt:'Qual a soma dos ângulos internos de um polígono com n=11 lados?',
+   options:['1440°','1620°','1800°','1980°'], correct:1,
+   explanation:'S_i = (11-2)·180° = 9·180° = 1620°.'},
+  {id:'M2', level:'Média', prompt:'Um polígono regular tem ângulo interno de 144°. Quantos lados ele tem e como se chama?',
+   options:['n=9, Eneágono','n=10, Decágono','n=12, Dodecágono','n=8, Octógono'], correct:1,
+   explanation:'144 = (n-2)·180/n → 144n = 180n - 360 → 36n = 360 → n = 10 (Decágono).'},
+  {id:'M3', level:'Média', prompt:'Para qual polígono regular a soma dos ângulos internos é o triplo da soma dos ângulos externos?',
+   options:['Hexágono (n=6)','Heptágono (n=7)','Octógono (n=8)','Eneágono (n=9)'], correct:2,
+   explanation:'S_i = 3·S_e = 3·360° = 1080°. (n-2)·180=1080 → n-2=6 → n=8, Octógono.'},
+  {id:'M4', level:'Média', prompt:'Num polígono regular, o ângulo central mede 40°. Qual é o ângulo interno correspondente?',
+   options:['40°','140°','120°','160°'], correct:1,
+   explanation:'a_c = a_e = 40°, e a_i + a_e = 180° → a_i = 180° - 40° = 140°.'},
+  {id:'M5', level:'Média', prompt:'Um polígono regular tem exatamente 9 diagonais partindo de cada vértice. Quantos lados ele tem?',
+   options:['n=10','n=11','n=12','n=13'], correct:2,
+   explanation:'Diagonais por vértice = n - 3 = 9 → n = 12 (Dodecágono).'},
+
+  {id:'D1', level:'Difícil', prompt:'Uma praça tem o formato de um polígono regular cujo ângulo interno mede 160°. Quantos lados tem essa praça?',
+   options:['n=16','n=18','n=20','n=15'], correct:1,
+   explanation:'160 = (n-2)·180/n → 160n = 180n - 360 → 20n = 360 → n = 18 (Octadecágono — praça octadecagonal).'},
+  {id:'D2', level:'Difícil', prompt:'Dois polígonos regulares têm números de lados que diferem em 3. A diferença entre suas somas de ângulos internos é 540°. Essa informação é consistente com a diferença de 3 lados?',
+   options:['Não, o esperado seria 360°','Não, o esperado seria 900°','Sim, pois cada lado a mais soma 180° em S_i (3×180°=540°)','Não é possível determinar'], correct:2,
+   explanation:'Como S_i=(n-2)·180°, cada lado extra aumenta S_i em exatamente 180°. Para 3 lados a mais, a diferença é 3×180°=540° — exatamente o que foi observado.'},
+  {id:'D3', level:'Difícil', prompt:'Num polígono regular, a razão entre o ângulo interno e o ângulo externo é 4 (a_i/a_e = 4). Qual o polígono?',
+   options:['Octógono (n=8)','Eneágono (n=9)','Decágono (n=10)','Dodecágono (n=12)'], correct:2,
+   explanation:'a_i = 4·a_e e a_i+a_e=180° → 5·a_e=180° → a_e=36° → n=360°/36°=10 (Decágono).'},
+  {id:'D4', level:'Difícil', prompt:'Por que hexágonos regulares ladrilham o plano perfeitamente, mas pentágonos regulares não?',
+   options:['Porque hexágonos têm mais lados','Porque 3×120°=360° cabe exatamente ao redor de um ponto, enquanto 3×108°=324° deixa um vão de 36°','Porque pentágonos não são regulares','Porque hexágonos são sempre convexos e pentágonos não'], correct:1,
+   explanation:'O ângulo interno do hexágono (120°) cabe exatamente 3 vezes em 360°. O do pentágono (108°) não: 3×108°=324°, sobra um vão de 36° que não fecha com um quarto pentágono (que exigiria 432°, passando de 360°).'},
+  {id:'D5', level:'Difícil', prompt:'Num polígono regular, o ângulo central é a metade do ângulo interno (a_c = a_i/2). Qual é esse polígono?',
+   options:['Pentágono (n=5)','Hexágono (n=6)','Heptágono (n=7)','Octógono (n=8)'], correct:1,
+   explanation:'a_c=a_e, então a_e=a_i/2. Como a_i+a_e=180°: a_i + a_i/2 = 180° → 1.5·a_i=180° → a_i=120° → n=360/(180-120)=6 (Hexágono).'},
+];
+document.addEventListener('DOMContentLoaded', ()=>{
+  renderQuiz(document.getElementById('chalF'), CHALLENGE.filter(q=>q.level==='Fácil'));
+  renderQuiz(document.getElementById('chalM'), CHALLENGE.filter(q=>q.level==='Média'));
+  renderQuiz(document.getElementById('chalD'), CHALLENGE.filter(q=>q.level==='Difícil'));
+});
+document.getElementById('chalSubmit').addEventListener('click', ()=>{
+  let correct=0;
+  CHALLENGE.forEach(q=>{ if(state.answered[q.id]) correct++; });
+  const box = document.getElementById('chalResult');
+  box.style.display='block';
+  const pct = Math.round(correct/CHALLENGE.length*100);
+  box.innerHTML = `<h3>Resultado: ${correct} / ${CHALLENGE.length} (${pct}%)</h3>
+    <p>${pct>=80?'🏆 Excelente! Você dominou os Polígonos Regulares.':pct>=50?'👍 Bom progresso — revise o Gabarito nas questões que errou.':'📚 Vale a pena revisitar os Módulos e tentar de novo.'}</p>`;
+  box.scrollIntoView({behavior:'smooth'});
+});
+
+/* ============ FLASHCARDS ============ */
+const FLASHCARDS = [
+  {front:'Polígono', back:'Figura plana fechada formada por segmentos de reta consecutivos que não se cruzam.'},
+  {front:'Polígono convexo', back:'Todo ângulo interno é menor que 180°. "Elástico esticado em pregos."'},
+  {front:'Polígono côncavo', back:'Tem ao menos um ângulo interno (reentrante) maior que 180°.'},
+  {front:'Polígono regular', back:'Equilátero E equiângulo ao mesmo tempo: todos os lados e todos os ângulos iguais.'},
+  {front:'S_i (soma dos internos)', back:'S_i = (n − 2) · 180°'},
+  {front:'S_e (soma dos externos)', back:'S_e = 360°, sempre, para qualquer polígono convexo.'},
+  {front:'a_i (ângulo interno regular)', back:'a_i = (n − 2) · 180° / n'},
+  {front:'a_e (ângulo externo regular)', back:'a_e = 360° / n'},
+  {front:'Ângulo central (a_c)', back:'a_c = 360° / n. Geometricamente, a_c = a_e sempre.'},
+  {front:'Apótema', back:'Segmento do centro até o ponto médio de um lado do polígono regular.'},
+];
+let flashIdx=0;
+function renderFlash(){
+  const c = FLASHCARDS[flashIdx];
+  document.getElementById('flashFront').innerHTML = `<h3 style="margin:0">${c.front}</h3>`;
+  document.getElementById('flashBack').innerHTML = `<p style="margin:0">${c.back}</p>`;
+  document.getElementById('flashTagF').textContent = 'TERMO';
+  document.getElementById('flashCount').textContent = `${flashIdx+1} / ${FLASHCARDS.length}`;
+  document.getElementById('flashcard').classList.remove('flipped');
+}
+document.getElementById('flashcard').addEventListener('click', function(){ this.classList.toggle('flipped'); });
+document.getElementById('flashNext').addEventListener('click', ()=>{ flashIdx=(flashIdx+1)%FLASHCARDS.length; renderFlash(); });
+document.getElementById('flashPrev').addEventListener('click', ()=>{ flashIdx=(flashIdx-1+FLASHCARDS.length)%FLASHCARDS.length; renderFlash(); });
+
+/* ============ GABARITO ============ */
+function buildGabarito(){
+  const all = [
+    ...QM1, ...QM2, ...QM3, ...QM4,
+    ...CHALLENGE.map(q=>({...q}))
+  ];
+  const list = document.getElementById('gabList');
+  list.innerHTML='';
+  all.forEach(q=>{
+    const cat = q.level ? q.level[0] : 'mod';
+    const div = document.createElement('div');
+    div.className='gab-item';
+    div.dataset.cat = q.level ? q.level[0] : 'mod';
+    div.innerHTML = `<div class="gab-head"><span><span class="qid">${q.id}</span>${q.prompt}</span><span class="chev">▾</span></div>
+      <div class="gab-body"><p><b>Resposta correta:</b> ${q.options[q.correct]}</p><p><b>Resolução:</b> ${q.explanation}</p></div>`;
+    div.querySelector('.gab-head').addEventListener('click', ()=>div.classList.toggle('open'));
+    list.appendChild(div);
+  });
+}
+document.querySelectorAll('.filter-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    const f = btn.dataset.f;
+    document.querySelectorAll('.gab-item').forEach(item=>{
+      const cat = item.dataset.cat;
+      let show = f==='all' || (f==='mod' && cat==='mod') || f===cat;
+      item.style.display = show ? '' : 'none';
+    });
+  });
+});
+
+/* ============ INIT ============ */
+document.addEventListener('DOMContentLoaded', async ()=>{
+  await loadState();
+  buildM3Table();
+  updateLab();
+  drawHero(6);
+  drawHexTiling(document.getElementById('hexTile'));
+  drawPentTiling(document.getElementById('pentTile'));
+  renderFlash();
+  buildGabarito();
+  // sync hero polygon with slider too
+  document.getElementById('nSlider').addEventListener('input', (e)=>drawHero(+e.target.value));
+});
+</script>
+</body>
+</html>
